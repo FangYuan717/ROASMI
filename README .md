@@ -1,5 +1,5 @@
 # ROASMI
-Code and initial model for the retention scores prediction in the “ROASMI: Repurposing retention data to aid small molecule identification” manuscript.  
+Code and initial model for the retention scores prediction in the **“ROASMI: Repurposing retention data to aid small molecule identification”** manuscript.  
 ## Overview
 Designed to predict retention scores for candidate compounds during small molecule identification, ROASMI consists of two main modules.    
 **The molecular embedding module.** This module is an extension of chemprop described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/10.1021/acs.jcim.9b00237) which is available in the [chemprop GitHub repository](https://github.com/chemprop/chemprop). A directed message transfer neural network (D-MPNN) is employed to learn directly from the structure of compounds, thus enabling the predictions of compounds in new chemical spaces: molecules can be mapped directly into generic chemical spaces highly attuned to the desired property without first being mapped into artificially designed chemical spaces of fingerprints or descriptors.   
@@ -20,14 +20,14 @@ Meantime, you may need to manually install a GPU-enabled version of PyTorch by f
 The optional descriptastorus package is only necessary if you plan to incorporate computed RDKit features into your model. The initial ROASMI we offer does not include these features because they were not shown performance gains during training.   
 ## Retraining
 To retrain ROASMI, run:  
-  `code(python code/ROASMI_train.py)`  
+  `python code/ROASMI_train.py`  
 Refer to `TrainArgs` in args.py for parameter changes. There are two initial models: ROASMI_1.pt for RPLC acidic conditions and ROASMI_2.pt for HILIC acidic conditions. If the parameters are not modified, the default settings involve retraining ROASMI_2 using 'dataset_83' as the reference set to predict 'dataset_84'.  
 ## Predicting
 To predict retention scores of each compound in given datasets, run:  
-  `code(python code/ROASMI_predict.py)`   
+  `python code/ROASMI_predict.py`   
 Refer to `PredictArgs` in args.py for parameter changes. The default prediction is made using the ROASMI_2 and the default pred_path is 'data/predict_toy_set. csv'.  
 ## Identifying
 This module is an extension of probabilistic framework described in the paper [Probabilistic framework for integration of mass spectrum and retention time information in small molecule identification](https://academic.oup.com/bioinformatics/article/37/12/1724/6007259?login=true) which is available in the [GitHub repository](https://github.com/aalto-ics-kepaco/msms_rt_score_integration).   
 To annotate small molecules in given datasets, we integrate predicted retention scores with MS/MS scores by running:  
-  `code(python code/Identify.py)`  
+  `python code/Identify.py`  
 Refer to `IdentifyArgs` in args.py for parameter changes. User-supplied files to be identified can be referenced in the 'data' folder as 'identify_toy_set.csv'.
