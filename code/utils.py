@@ -345,17 +345,27 @@ class NoamLR(_LRScheduler):
 def pick_pair_for_rank(group_one_data, args: Union[TrainArgs, PredictArgs]):
     
     RT_interval = args.RT_interval 
-    j=0
-    pair_data=pd.DataFrame(columns=('System','SMILES','RT','SMILES1','RT1'))
-    group_one_data_num=len(group_one_data)
-    for i in range(group_one_data_num-1):
-        while j<group_one_data_num-1:
-            j=j+1                        
-            if(group_one_data.iloc[j,2]-group_one_data.iloc[i,2]>=RT_interval):
-                pair_data=pair_data.append(pd.DataFrame({'SMILES':[group_one_data.iloc[i,1]],'RT':[group_one_data.iloc[i,2]],
-                                                         'System':[group_one_data.iloc[i,0]],'SMILES1':[group_one_data.iloc[j,1]],
-                                                         'RT1':[group_one_data.iloc[j,2]]}),ignore_index=True)
+    pair_data = []
+    group_one_data_num = len(group_one_data)
+    
+    i = 0
+    while i < group_one_data_num - 1:
+        j = i + 1
+        while j < group_one_data_num:
+            if group_one_data.iloc[j, 2] - group_one_data.iloc[i, 2] >= RT_interval:
+                pair_data.append({
+                    'System': group_one_data.iloc[i, 0],
+                    'SMILES': group_one_data.iloc[i, 1],
+                    'RT': group_one_data.iloc[i, 2],
+                    'SMILES1': group_one_data.iloc[j, 1],
+                    'RT1': group_one_data.iloc[j, 2]
+                })
                 break
+            j += 1
+        i += 1
+    
+    pair_data = pd.DataFrame(pair_data, columns=('System', 'SMILES', 'RT', 'SMILES1', 'RT1'))
+    
     return pair_data
 
 def filter_invalid_smiles(data):
@@ -377,36 +387,43 @@ def split_data_for_rank(data, split_type: str,sizes: Tuple[float, float, float],
         train_size = int(sizes[0] * len(data))
         train_val_size = int((sizes[0] + sizes[1]) * len(data))
 
-        tr_data = pd.DataFrame(columns = ('System','SMILES','RT'))
-        val_data = pd.DataFrame(columns = ('System','SMILES','RT'))
-        test_data = pd.DataFrame(columns = ('System','SMILES','RT'))
-        for i in indices[:train_size]:
-            tr_data = tr_data.append(pd.DataFrame({'System':[data.values[i,0]],'SMILES':[data.values[i,1]],'RT':[data.values[i,2]]}),ignore_index=True) 
-        for i in indices[train_size:train_val_size]:
-            val_data = val_data.append(pd.DataFrame({'System':[data.values[i,0]],'SMILES':[data.values[i,1]],'RT':[data.values[i,2]]}),ignore_index=True) 
-        for i in indices[train_val_size:]:
-            test_data = test_data.append(pd.DataFrame({'System':[data.values[i,0]],'SMILES':[data.values[i,1]],'RT':[data.values[i,2]]}),ignore_index=True)
+        tr_data_list = [None] * train_size
+        val_data_list = [None] * (train_val_size - train_size)
+        test_data_list = [None] * (len(data) - train_val_size)
+        
+        for i, idx in enumerate(indices[:train_size]):
+            tr_data_list[i] = data.values[idx]
+        for i, idx in enumerate(indices[train_size:train_val_size]):
+            val_data_list[i] = data.values[idx]
+        for i, idx in enumerate(indices[train_val_size:]):
+            test_data_list[i] = data.values[idx]
+
+        tr_data = pd.DataFrame(tr_data_list, columns=['System', 'SMILES', 'RT'])
+        val_data = pd.DataFrame(val_data_list, columns=['System', 'SMILES', 'RT'])
+        test_data = pd.DataFrame(test_data_list, columns=['System', 'SMILES', 'RT'])
     
     elif split_type == 'cv':
-        random = Random(0)
-        
+        random = Random(0)        
         num_folds = TrainArgs.num_folds
         indices = np.repeat(np.arange(num_folds), 1 + len(data) // num_folds)[:len(data)]
         random.shuffle(indices)
+        
         test_index = seed % num_folds
         val_index = (seed + 1) % num_folds
 
-        tr_data = pd.DataFrame(columns=('System','SMILES','RT'))
-        val_data = pd.DataFrame(columns=('System','SMILES','RT'))
-        test_data = pd.DataFrame(columns=('System','SMILES','RT'))
+        tr_data_list, val_data_list, test_data_list = [], [], []
 
         for d, index in zip(data.values, indices):
             if index == test_index:
-                test_data = test_data.append(pd.DataFrame({'System':[d[0]],'SMILES':[d[1]],'RT':[d[2]]}),ignore_index=True) 
+                test_data_list.append([d[0], d[1], d[2]])
             elif index == val_index:
-                val_data = val_data.append(pd.DataFrame({'System':[d[0]],'SMILES':[d[1]],'RT':[d[2]]}),ignore_index=True) 
+                val_data_list.append([d[0], d[1], d[2]])
             else:
-                tr_data = tr_data.append(pd.DataFrame({'System':[d[0]],'SMILES':[d[1]],'RT':[d[2]]}),ignore_index=True)  
+                tr_data_list.append([d[0], d[1], d[2]])
+
+        tr_data = pd.DataFrame(tr_data_list, columns=['System', 'SMILES', 'RT'])
+        val_data = pd.DataFrame(val_data_list, columns=['System', 'SMILES', 'RT'])
+        test_data = pd.DataFrame(test_data_list, columns=['System', 'SMILES', 'RT']) 
       
     return tr_data,val_data,test_data
 
@@ -414,19 +431,18 @@ def get_data_for_rank(data, args: Union[TrainArgs, PredictArgs],logger: Logger)-
     
     features_generator = args.features_generator
     data_system_group = np.unique(data.iloc[:,0])                             
-    system_group_num = len(data_system_group)
-    pair_data_all = pd.DataFrame(columns=('System','SMILES','RT','SMILES1','RT1'))
-    for k in range(system_group_num):
-        system_group_one_data = data[data["System"]==data_system_group[k]]
-        system_group_one_data = system_group_one_data.sort_values(by="RT")
-        system_group_one_data.reset_index(drop=True)
-        #group_one_data=system_group_one_data
-        pair_data_one = pick_pair_for_rank(system_group_one_data,args)
-        pair_data_all = pair_data_all.append(pair_data_one)   
+    pair_data_all = []
+    
+    for system in data_system_group:
+        system_group_one_data = data[data["System"] == system].sort_values(by="RT").reset_index(drop=True)
+        pair_data_one = pick_pair_for_rank(system_group_one_data, args)
+        pair_data_all.append(pair_data_one)
 
-    data1 = MoleculeDataset([MoleculeDatapoint(smiles=[smiles],targets=targets,features_generator=features_generator)
-                             for i, (smiles, targets) in enumerate(zip(pair_data_all['SMILES'], pair_data_all['RT']))])
-    data2 = MoleculeDataset([MoleculeDatapoint(smiles=[smiles],targets=targets,features_generator=features_generator)
-                             for i, (smiles, targets) in enumerate(zip(pair_data_all['SMILES1'], pair_data_all['RT1']))])
+    pair_data_all = pd.concat(pair_data_all, ignore_index=True)
+
+    data1 = MoleculeDataset([MoleculeDatapoint(smiles=[smiles], targets=targets, features_generator=features_generator)
+                             for smiles, targets in zip(pair_data_all['SMILES'], pair_data_all['RT'])])
+    data2 = MoleculeDataset([MoleculeDatapoint(smiles=[smiles], targets=targets, features_generator=features_generator)
+                             for smiles, targets in zip(pair_data_all['SMILES1'], pair_data_all['RT1'])])
     
     return data1,data2
