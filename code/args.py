@@ -16,7 +16,7 @@ class CommonArgs(Tap):
     """:class:`CommonArgs` contains arguments that are used in both :class:`TrainArgs` and :class:`PredictArgs`."""
 
     batch_size: int = 64
-    no_cuda: bool = True
+    no_cuda: bool = False
     """Turn off cuda (i.e., use CPU instead of GPU)."""    
     features_generator: List[str] = None #['morgan_count'] #['rdkit_2d_normalized'] 
     """Choices=["morgan_count", "rdkit_2d_normalized"]
