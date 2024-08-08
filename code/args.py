@@ -21,7 +21,7 @@ class CommonArgs(Tap):
     features_generator: List[str] = None #['morgan_count'] #['rdkit_2d_normalized'] 
     """Choices=["morgan_count", "rdkit_2d_normalized"]
     Other custom features generator template is provided in features.py."""
-    checkpoint_paths: List[str] = ['ROASMI_2.pt'] #['ROASMI_1.pt']
+    checkpoint_paths: List[str] = ['ROASMI_HILIC_1.pt','ROASMI_HILIC_2'] 
     """List of paths to model checkpoints (:code:`.pt` files)."""
     RT_interval: int = 25
     """The retention interval (in seconds) for generating training pairs."""
@@ -122,7 +122,7 @@ class TrainArgs(CommonArgs):
     features_only: bool = False
     """Use only the additional features in an FFN, no graph network.
     Pay attention: When using features_only, a features_generator ust be provided."""
-    ensemble_size: int = 1
+    ensemble_size: int = 2
     """Number of models in ensemble."""
     aggregation: Literal['mean', 'sum', 'norm'] = 'mean'
     """Aggregation scheme for atomic vectors into molecular vectors"""
