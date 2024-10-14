@@ -2,8 +2,7 @@
 ROASMI is a Retention Order model to Assist Small Molecule Identification.   
 In addition to code and trained models, this repository also contains data that allows researchers to recreate the entire analysis for the manuscript:  
 **“ROASMI: Repurposing retention data to aid small molecule identification”** .  
-We provide four initial ROASMI models (ROASMI_1 - ROASMI_4) and two re-trained ROASMI models(ROASMI_HILIC_1 & ROASMI_HILIC_2).   
-The former models apply to experiments using an RPLC system with an eluent pH of around 2.7, while the latter models apply to HILIC systems with a similar acidic eluent pH level.  
+We provide four initial ROASMI models (ROASMI_1 - ROASMI_5) for predicting the retention behavior of compounds in the reversed-phase liquid chromatography (RPLC) system with an eluent pH of around 2.7.  
 The ensemble approach allowed quantifying model uncertainty using the variance of the retention order predictions across the trained models.   
 ## Overview
 Designed to predict retention scores for candidate compounds during small molecule identification, ROASMI consists of two main modules.    
