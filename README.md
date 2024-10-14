@@ -37,4 +37,4 @@ To annotate small molecules in ready-to-identify datasets, we integrate predicte
   `python code/Identify.py`  
 See `IdentifyArgs` in args.py for parameter changes. User-supplied files to be identified can be referenced as 'identify_toy_set.csv' in the 'data' folder .
 # External Archive
-This project is also archived on Zenodo with the following DOI: 10.5281/zenodo.13927187(https://doi.org/10.5281/zenodo.13927187)
+This project is also archived on Zenodo with the following DOI: [10.5281/zenodo.13927187](https://doi.org/10.5281/zenodo.13927187)
